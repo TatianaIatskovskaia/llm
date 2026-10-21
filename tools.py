@@ -1,8 +1,8 @@
 import requests
+import os
 
 URL = 'https://api.apilayer.com/fixer/latest'
-API_KEY = 'pbBX3UJ3iVcHSVtOyB2wBHNSaCKZzPgO'
-
+API_KEY = os.environ.get('API_KEY')
 if not API_KEY:
     raise RuntimeError("API_KEY is not set")
 
