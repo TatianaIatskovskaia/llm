@@ -1,4 +1,4 @@
-import requests
+import httpx
 import os
 
 URL = 'https://api.apilayer.com/fixer/latest'
@@ -7,12 +7,13 @@ if not API_KEY:
     raise RuntimeError("API_KEY is not set")
 
 
-def get_exchange_rate(from_currency, to_currency):
+async def get_exchange_rate(from_currency, to_currency):
     from_currency = from_currency.upper()
     to_currency = to_currency.upper()
     try:
-        resp = requests.get(URL, params={'base': from_currency, 'symbols': to_currency}, headers={'apikey': API_KEY})
-    except requests.RequestException:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(URL, params={'base': from_currency, 'symbols': to_currency}, headers={'apikey': API_KEY})
+    except httpx.RequestError:
         return f"Could not reach the exchange rate service to check {from_currency} to {to_currency}"
     data = resp.json()
     if resp.status_code != 200 or not data.get('success', True):

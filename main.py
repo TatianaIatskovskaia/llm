@@ -1,16 +1,19 @@
-from ollama import chat
+from ollama import AsyncClient
 import json
+import asyncio
 from tools import TOOLS
 from system_content import SYSTEM_CONTENT
 
 MODEL_NAME = 'phi3'
 
+client = AsyncClient()
 
-def chat_request(messages):
+
+async def chat_request(messages):
     full_reply = ''
     try:
-        stream = chat(model=MODEL_NAME, messages=messages, stream=True)
-        for chunk in stream:
+        stream = await client.chat(model=MODEL_NAME, messages=messages, stream=True)
+        async for chunk in stream:
             piece = chunk['message']['content']
             print(piece, end='', flush=True)
             full_reply += piece
@@ -31,14 +34,14 @@ def parse_tool_call(text):
     return data if isinstance(data, dict) and 'tool' in data else None
 
 
-def call_tool(tool_call: dict):
+async def call_tool(tool_call: dict):
     tool = TOOLS.get(tool_call.get('tool'))
     if not tool:
         return None
-    return tool(**tool_call.get('arguments', {}))
+    return await tool(**tool_call.get('arguments', {}))
 
 
-def main():
+async def main():
     messages = [
         {
             'role': 'system',
@@ -47,7 +50,7 @@ def main():
     ]
     print('phi-3 simple chat. Type "exit" to quit.')
     while True:
-        user_input = input('You: ')
+        user_input = await asyncio.to_thread(input, 'You: ')
         if user_input == 'exit':
             print('Bye')
             break
@@ -56,21 +59,21 @@ def main():
             'content': user_input
         })
         print('\nAssistant:', end='', flush=True)
-        reply = chat_request(messages)
+        reply = await chat_request(messages)
         messages.append({
             'role': 'assistant',
             'content': reply
         })
         tool_call = parse_tool_call(reply)
         if tool_call:
-            tool_result = call_tool(tool_call)
+            tool_result = await call_tool(tool_call)
             if tool_result:
                 messages.append({
                     'role': 'system',
                     'content': f"Tool result: {tool_result}\nAnswer the user's last question using the tool result"
                 })
                 print('\nAssistant:', end='', flush=True)
-                reply = chat_request(messages)
+                reply = await chat_request(messages)
                 messages.append({
                     'role': 'assistant',
                     'content': reply
@@ -78,4 +81,5 @@ def main():
         print('_' * 60)
 
 
-main()
+if __name__ == '__main__':
+    asyncio.run(main())
