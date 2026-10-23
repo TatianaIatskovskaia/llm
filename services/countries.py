@@ -5,7 +5,7 @@ import httpx
 from fastapi import HTTPException
 from loggers.logger_req import logger
 
-COUNTRY_URL = "https://api.restcountries.com/v5"
+COUNTRY_URL = "https://api.restcountries.com/countries/v5"
 API_KEY = os.environ.get("COUNTRY_API_KEY")
 
 if not API_KEY:
@@ -16,6 +16,14 @@ class CountryInfo:
     capital: str
     currency_code: str
     currency_name: str
+
+def handing_best_similarity(objects, country_name):
+    item = None
+    for country in objects:
+        if country.get("names", {}).get("common").casefold() == country_name.casefold():
+            item = country
+            break
+    return item
 
 async def get_country_info(country_name: str) -> CountryInfo:
     logger.debug(f"Getting country info for {country_name}")
@@ -39,7 +47,7 @@ async def get_country_info(country_name: str) -> CountryInfo:
     if not objects:
         logger.warning(f"Country {country_name} not found")
         raise HTTPException(status_code=400, detail=f"Country {country_name} not found")
-    item = objects[0]
+    item = handing_best_similarity(objects, country_name)
     try:
         capital = item["capitals"][0]["name"]
         currency_code = item["currencies"][0]["code"]
