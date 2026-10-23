@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from loggers.logger_req import logger
 
 FIXER_URL = "https://api.apilayer.com/fixer/convert"
-API_KEY = os.getenv("FIXER_API_KEY")
+API_KEY = os.environ.get("FIXER_API_KEY")
 
 if not API_KEY:
     raise ValueError("FIXER_API_KEY environment variable is not set")

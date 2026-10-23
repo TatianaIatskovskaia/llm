@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from loggers.logger_req import logger
 
 WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
-API_KEY = os.getenv("WEATHER_API_KEY")
+API_KEY = os.environ.get("WEATHER_API_KEY")
 
 if not API_KEY:
     raise ValueError("WEATHER_API_KEY environment variable is not set")
