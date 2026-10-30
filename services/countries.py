@@ -17,13 +17,27 @@ class CountryInfo:
     currency_code: str
     currency_name: str
 
-def handing_best_similarity(objects, country_name):
-    item = None
-    for country in objects:
-        if country.get("names", {}).get("common").casefold() == country_name.casefold():
-            item = country
-            break
-    return item
+def handing_best_similarity(objects: list[dict], country_name: str) -> dict:
+    query = country_name.strip().casefold()
+    for item in objects:
+        codes = item.get("codes", {})
+        if query in (
+            str(codes.get("alpha_2", "")).casefold(),
+            str(codes.get("alpha_3", "")).casefold(),
+        ):
+            return item
+    for item in objects:
+        if item.get("names", {}).get("common", "").casefold() == query:
+            return item
+    return objects[0]
+
+# def handing_best_similarity(objects, country_name):
+#     item = None
+#     for country in objects:
+#         if country.get("names", {}).get("common").casefold() == country_name.casefold():
+#             item = country
+#             break
+#     return item
 
 async def get_country_info(country_name: str) -> CountryInfo:
     logger.debug(f"Getting country info for {country_name}")
